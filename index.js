@@ -38,7 +38,13 @@ async function run() {
       .collection("jobApplication");
 
     app.get("/jobs", async (req, res) => {
-      const cursor = jobCollections.find();
+      const email = req.query.email;
+      let query = {};
+      if (email) {
+        query = { hr_email: email };
+      }
+
+      const cursor = jobCollections.find(query);
       const result = await cursor.toArray();
       res.send(result);
     });
@@ -46,6 +52,11 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await jobCollections.findOne(query);
+      res.send(result);
+    });
+    app.post("/jobs", async (req, res) => {
+      const newJob = req.body;
+      const result = await jobCollections.insertOne(newJob);
       res.send(result);
     });
 
@@ -59,15 +70,12 @@ async function run() {
       //  fokira wayy
 
       for (const app of result) {
-        console.log(app.job_id);
-
         const query1 = { _id: new ObjectId(app.job_id) };
         const job = await jobCollections.findOne(query1);
         if (job) {
           app.title = job.title;
-          app.company=job.company
-          app.company_logo=job.company_logo
-
+          app.company = job.company;
+          app.company_logo = job.company_logo;
         }
       }
       res.send(result);
@@ -77,6 +85,14 @@ async function run() {
 
     // console.log(job_ids)
     // console.log(jobs)
+
+// view applications
+    app.get("/jobs-applications/jobs/:job_id",async(req,res)=>{
+      const jobId=req.params.job_id ;
+      const query={job_id: jobId}
+      const result= await jobApplicationCollection.find(query).toArray()
+      res.send(result)
+    })
 
     app.post("/jobs-applications", async (req, res) => {
       const application = req.body;
